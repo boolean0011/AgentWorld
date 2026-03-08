@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="AgentWorld-Core.Tests/AgentWorld-Core.Tests.csproj" />
+  <Project Path="AgentWorld-Core/AgentWorld-Core.csproj" />
+  <Project Path="AgentWorld-Demo.Tests/AgentWorld-Demo.Tests.csproj" />
+  <Project Path="AgentWorld-Demo/AgentWorld-Demo.csproj" />
+</Solution>

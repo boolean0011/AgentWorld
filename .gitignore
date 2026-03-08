@@ -1,0 +1,6 @@
+# Ignore sensitive local config in any project
+**/appsettings.json
+
+# Ignore build artifacts in any project
+**/bin/
+**/obj/
