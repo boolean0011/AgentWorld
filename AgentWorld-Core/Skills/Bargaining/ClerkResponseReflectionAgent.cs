@@ -4,7 +4,7 @@ using Microsoft.Extensions.AI;
 
 namespace AgentWorld.Skills.Bargaining;
 
-public class BargainingOutputValidatorAgent(IChatClient chatClient) : IOutputValidatorAgent
+public class ClerkResponseReflectionAgent(IChatClient chatClient) : IResponseReflectionAgent
 {
     public async Task<OutputCheckResult> RunAsync(string content, IContext context)
     {
@@ -41,6 +41,4 @@ public class BargainingOutputValidatorAgent(IChatClient chatClient) : IOutputVal
     }
 
     public int MaxReflections { get; set; } = 3;
-
-    public string FailureFallbackContent => "抱歉，我刚才有点走神了，没听清您说什么，我们继续刚才的话题吧。";
 }

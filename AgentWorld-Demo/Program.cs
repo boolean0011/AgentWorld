@@ -32,26 +32,26 @@ IReadOnlyList<UserAgent> clerkAgents =
 [
     new UserAgent(
         chatClient: roleAgentClient,
-        instructions: File.ReadAllText(Path.Combine("prompts", "xiao_mian_tuan.md")),
+        instructions: File.ReadAllText(Path.Combine("Prompts", "xiao_mian_tuan.md")),
         name: "小面团",
         description: "小面团",
         role: "Clerk",
         promptProvider: new DemoUserAgentPrompt(),
-        outputValidatorAgent: new BargainingOutputValidatorAgent(systemAgentClient))
+        responseReflectionAgent: new ClerkResponseReflectionAgent(systemAgentClient))
 ];
 
 IReadOnlyList<UserAgent> consumerAgents =
 [
     new UserAgent(
         chatClient: roleAgentClient,
-        instructions: File.ReadAllText(Path.Combine("prompts", "mu_ye.md")),
+        instructions: File.ReadAllText(Path.Combine("Prompts", "mu_ye.md")),
         name: "牧野",
         description: "牧野",
         role: "Customer",
         promptProvider: new DemoUserAgentPrompt()),
     new UserAgent(
         chatClient: roleAgentClient,
-        instructions: File.ReadAllText(Path.Combine("prompts", "xiao_ai.md")),
+        instructions: File.ReadAllText(Path.Combine("Prompts", "xiao_ai.md")),
         name: "小艾",
         description: "小艾",
         role: "Customer",

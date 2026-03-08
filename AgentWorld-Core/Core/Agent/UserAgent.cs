@@ -1,7 +1,6 @@
 using AgentWorld.Core.Context;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
-using OpenAI.Realtime;
 
 namespace AgentWorld.Core.Agent;
 
@@ -12,8 +11,11 @@ public class UserAgent(
     string description,
     string role,
     IUserAgentPrompt promptProvider,
-    IOutputValidatorAgent? outputValidatorAgent = null) : IUserAgent
+    IResponseReflectionAgent? responseReflectionAgent = null,
+    string? reflectionFailureFallbackContent = null) : IUserAgent
 {
+    public string ReflectionFailureFallbackContent { get; } = reflectionFailureFallbackContent ?? "抱歉，我刚才有点走神了，没听清您说什么，我们继续刚才的话题吧。";
+
     private readonly AIAgent _agent = new ChatClientAgent(
             chatClient: chatClient,
             instructions: instructions,
@@ -38,13 +40,13 @@ public class UserAgent(
         var response = await _agent.RunAsync(messages);
         var content = response.Text ?? string.Empty;
 
-        if (outputValidatorAgent != null)
+        if (responseReflectionAgent != null)
         {
             var success = false;
-            for(var i =0; i < outputValidatorAgent.MaxReflections; i++)
+            for (var i = 0; i < responseReflectionAgent.MaxReflections; i++)
             {
-                var checkResult = await outputValidatorAgent.RunAsync(content, context);
-                if(checkResult.IsValid)
+                var checkResult = await responseReflectionAgent.RunAsync(content, context);
+                if (checkResult.IsValid)
                 {
                     success = true;
                     break;
@@ -64,7 +66,7 @@ public class UserAgent(
             if (!success)
             {
                 Console.WriteLine($"[{_agent.Name} 最终失败] 无法生成合规回复，使用默认兜底内容。");
-                content = outputValidatorAgent.FailureFallbackContent;
+                content = ReflectionFailureFallbackContent;
             }
         }
 
