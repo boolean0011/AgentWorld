@@ -1,4 +1,4 @@
-namespace AgentWorld.Skills.Bargaining;
+namespace AgentWorld.Scenarios.Bargaining;
 
 /// <summary>裁判 Agent 对一轮对话的评估结果。</summary>
 public record BargainingEvaluationResult

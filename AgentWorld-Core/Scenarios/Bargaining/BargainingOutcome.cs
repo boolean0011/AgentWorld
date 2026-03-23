@@ -1,4 +1,4 @@
-namespace AgentWorld.Skills.Bargaining;
+namespace AgentWorld.Scenarios.Bargaining;
 
 /// <summary>砍价谈判的结局状态。</summary>
 public enum BargainingRoundEvaluation

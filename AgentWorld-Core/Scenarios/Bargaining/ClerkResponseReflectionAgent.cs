@@ -2,7 +2,7 @@ using AgentWorld.Core.Agent;
 using AgentWorld.Core.Context;
 using Microsoft.Extensions.AI;
 
-namespace AgentWorld.Skills.Bargaining;
+namespace AgentWorld.Scenarios.Bargaining;
 
 public class ClerkResponseReflectionAgent(IChatClient chatClient) : IResponseReflectionAgent
 {

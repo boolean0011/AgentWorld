@@ -1,5 +1,5 @@
 using AgentWorld.Core.Agent;
-using AgentWorld.Skills.Bargaining;
+using AgentWorld.Scenarios.Bargaining;
 
 namespace AgentWorld.Demo.App;
 

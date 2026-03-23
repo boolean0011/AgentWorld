@@ -1,7 +1,7 @@
 using AgentWorld.Core.Context;
 using Microsoft.Extensions.AI;
 
-namespace AgentWorld.Skills.Bargaining;
+namespace AgentWorld.Scenarios.Bargaining;
 
 /// <summary>
 /// 砍价场景的世界状态，在每一轮对话中由 Orchestrator 维护并传递给所有 Agent。
@@ -10,6 +10,12 @@ public class BargainingContext : IContext
 {
     /// <summary>当前回合数（从 1 开始）。</summary>
     public int CurrentRound { get; set; } = 0;
+
+    /// <summary>目标商品名称，由 SkillAgent 在启动前填充</summary>
+    public string ProductName { get; set; } = string.Empty;
+
+    /// <summary>买方心理最低价位预期，由 SkillAgent 在启动前填充</summary>
+    public decimal TargetPrice { get; set; }
 
     /// <summary>最大回合数，由 Orchestrator 在开始时写入。</summary>
     public int MaxRounds { get; set; }

@@ -1,9 +1,9 @@
 using AgentWorld.Core.Agent;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
-using AIAgentResponse = Microsoft.Agents.AI.AgentResponse<AgentWorld.Skills.Bargaining.BargainingEvaluationResult>;
+using AIAgentResponse = Microsoft.Agents.AI.AgentResponse<AgentWorld.Scenarios.Bargaining.BargainingEvaluationResult>;
 
-namespace AgentWorld.Skills.Bargaining;
+namespace AgentWorld.Scenarios.Bargaining;
 
 public class BargainingJudgeAgent(IChatClient chatClient, string? prompt = null) : ISystemAgent<BargainingContext, BargainingEvaluationResult>
 {

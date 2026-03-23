@@ -1,4 +1,4 @@
-namespace AgentWorld.Skills.Bargaining;
+namespace AgentWorld.Scenarios.Bargaining;
 
 /// <summary>砍价 Orchestrator 响应的抽象基类。</summary>
 public abstract record BargainingResponse(BargainingPhase Status);

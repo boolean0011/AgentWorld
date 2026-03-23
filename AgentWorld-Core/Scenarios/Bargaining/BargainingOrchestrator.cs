@@ -1,7 +1,7 @@
 using AgentWorld.Core.Agent;
 using AgentWorld.Core.Context;
 
-namespace AgentWorld.Skills.Bargaining;
+namespace AgentWorld.Scenarios.Bargaining;
 
 public class BargainingOrchestrator(
     IReadOnlyList<UserAgent> clerkAgents,
@@ -11,6 +11,12 @@ public class BargainingOrchestrator(
     int maxRounds) : IAgentOrchestrator<BargainingResponse>
 {
     private readonly BargainingContext _state = new();
+
+    public void SetTargetParameters(string productName, decimal targetPrice)
+    {
+        _state.ProductName = productName;
+        _state.TargetPrice = targetPrice;
+    }
 
     public async IAsyncEnumerable<BargainingResponse> RunAsync()
     {

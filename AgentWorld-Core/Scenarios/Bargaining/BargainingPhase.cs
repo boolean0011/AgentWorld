@@ -1,4 +1,4 @@
-namespace AgentWorld.Skills.Bargaining;
+namespace AgentWorld.Scenarios.Bargaining;
 
 /// <summary>
 /// 砍价的生命周期阶段，用于指示当前处于互动流程的哪一部分，
