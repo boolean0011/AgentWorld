@@ -4,7 +4,7 @@ namespace AgentWorld.Scenarios.Bargaining;
 /// 砍价的生命周期阶段，用于指示当前处于互动流程的哪一部分，
 /// 并驱动 Agent 生成处于对应阶段的 Prompt。
 /// </summary>
-public enum BargainingPhase
+public enum BargainingStage
 {
     NotStarted,
     Start,          // 开场欢迎/提出意向

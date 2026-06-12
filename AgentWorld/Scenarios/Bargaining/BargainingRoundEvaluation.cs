@@ -1,10 +1,10 @@
 namespace AgentWorld.Scenarios.Bargaining;
 
 /// <summary>裁判 Agent 对一轮对话的评估结果。</summary>
-public record BargainingEvaluationResult
+public record BargainingRoundEvaluation
 {
     /// <summary>本轮判定的谈判结局。</summary>
-    public BargainingRoundEvaluation Result { get; init; } = BargainingRoundEvaluation.Ongoing;
+    public BargainingOutcome Result { get; init; } = BargainingOutcome.Ongoing;
 
     /// <summary>店员耐心值变化量（负数表示下降）。</summary>
     public int PatienceDelta { get; init; }

@@ -1,6 +1,6 @@
-namespace AgentWorld.Agent;
+namespace AgentWorld.Router;
 
-public sealed record Route(string Description, string TargetExecutorId);
+public sealed record Route(string TriggerCondition, string TargetExecutorId);
 
 public abstract record RouterResponse;
 

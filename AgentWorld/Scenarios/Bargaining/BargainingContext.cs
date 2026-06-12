@@ -36,13 +36,13 @@ public class BargainingContext : IContext
     /// 当前砍价结局状态。
     /// Ongoing = 进行中，Agreed = 已达成交易，Broken = 谈判已破裂。
     /// </summary>
-    public BargainingRoundEvaluation Result { get; set; } = BargainingRoundEvaluation.Ongoing;
+    public BargainingOutcome Result { get; set; } = BargainingOutcome.Ongoing;
 
     /// <summary>全局对话历史，按时间顺序追加，所有 Agent 均可读取。</summary>
     public List<ChatMessage> ConversationHistory { get; } = []; // todo 
 
     /// <summary>当前的砍价生命周期阶段。</summary>
-    public BargainingPhase Phase { get; set; } = BargainingPhase.NotStarted;
+    public BargainingStage Phase { get; set; } = BargainingStage.NotStarted;
 
     /// <summary>世界观察者 Agent 对当前环境的描述文本。</summary>
     public string Observation { get; set; } = string.Empty;

@@ -2,7 +2,7 @@ using System.ComponentModel;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
-namespace AgentWorld.Agent;
+namespace AgentWorld.Router;
 
 public class RouterAgent
 {
@@ -105,7 +105,7 @@ public class RouterAgent
                 new AIFunctionFactoryOptions
                 {
                     Name = name,
-                    Description = route.Description
+                    Description = route.TriggerCondition
                 });
 
             routesDict.Add(name, route);

@@ -1,4 +1,4 @@
-
+using AgentWorld.Context;
 using Microsoft.Extensions.AI;
 
 namespace AgentWorld.Scenarios.Bargaining;
@@ -6,9 +6,13 @@ namespace AgentWorld.Scenarios.Bargaining;
 /// <summary>
 /// 谈判判定裁判 Agent，直接使用 IChatClient 进行无状态的独立判定，
 /// 评估谈判状态（继续、达成交易、破裂）、耐心值变动、好感度变动，并返回结构化的判定数据。
+/// 
+/// 这个类使用模版偏化方法，因为prompt中已经写好了输出格式。
 /// </summary>
-public class BargainingJudgeAgent : IBargainingJudgeAgent
-{
+public class BargainingJudgeAgent<TEvaluation, TContext> : IBargainingJudgeAgent<TEvaluation, TContext>
+    where TContext : IContext
+    where TEvaluation : BargainingRoundEvaluation
+{    
     /// <summary>
     /// 底层使用的 AI 聊天客户端。
     /// </summary>
@@ -66,15 +70,16 @@ public class BargainingJudgeAgent : IBargainingJudgeAgent
     /// <param name="context">当前的谈判上下文状态，包含历史对话纪录。</param>
     /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>裁判打分和判定的结构化结果。</returns>
-    public async Task<BargainingEvaluationResult> RunAsync(BargainingContext context, CancellationToken cancellationToken = default)
+    public async Task<TEvaluation> RunAsync(TContext context, CancellationToken cancellationToken = default)
     {
+        // todo
         // 构造发送给大模型的完整上下文（历史对话 + 裁判触发词）
         var messages = new List<ChatMessage>(context.ConversationHistory)
         {
             new(ChatRole.User, _triggerPrompt)
         };
 
-        var response = await _chatClient.GetResponseAsync<BargainingEvaluationResult>(
+        var response = await _chatClient.GetResponseAsync<TEvaluation>(
             messages,
             new ChatOptions
             {

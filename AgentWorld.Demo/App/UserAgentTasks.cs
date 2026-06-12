@@ -2,14 +2,14 @@ using AgentWorld.Scenarios.Bargaining;
 
 namespace AgentWorld.Demo.App;
 
-public static class CustomUserAgentPrompt
+public static class UserAgentTasks
 {
     public static readonly Func<BargainingContext, string> XiaoMianTuan = (context) =>
     {
         return context switch
         {
-            { Phase: BargainingPhase.Start } => "小艾和牧野走进了你的面包店，请热情地欢迎他们，并向他们介绍今天的招牌商品和价格。",
-            { Phase: BargainingPhase.FinalPush } => $"""
+            { Phase: BargainingStage.Start } => "小艾和牧野走进了你的面包店，请热情地欢迎他们，并向他们介绍今天的招牌商品和价格。",
+            { Phase: BargainingStage.FinalPush } => $"""
                 当前进度：第{context.CurrentRound}轮/共{context.MaxRounds}轮，砍价即将结束，请尽快做出最终决定！
                 当前耐心值: {context.Patience}/100, 好感度: {context.Affection}/100。
                 当前突发状况/事件：
@@ -44,8 +44,8 @@ public static class CustomUserAgentPrompt
     {
         return context switch
         {
-            { Phase: BargainingPhase.Start } => "你和小艾一起走进了小面团的面包店，看看有什么好吃的，顺便看看能不能砍砍价。",
-            { Phase: BargainingPhase.FinalPush } => $"""
+            { Phase: BargainingStage.Start } => "你和小艾一起走进了小面团的面包店，看看有什么好吃的，顺便看看能不能砍砍价。",
+            { Phase: BargainingStage.FinalPush } => $"""
                 最后机会！第{context.CurrentRound}轮/共{context.MaxRounds}轮，基于之前的对话，请使出你的杀手锏，配合小艾做最后冲刺，争取拿到最低价！
                 当前突发状况/事件：
                 {context.Observation}
@@ -62,8 +62,8 @@ public static class CustomUserAgentPrompt
     {
         return context switch
         {
-            { Phase: BargainingPhase.Start } => "你和牧野一起走进了小面团的面包店，看到菜单上的价格觉得有点贵，决定砍砍价！",
-            { Phase: BargainingPhase.FinalPush } => $"""
+            { Phase: BargainingStage.Start } => "你和牧野一起走进了小面团的面包店，看到菜单上的价格觉得有点贵，决定砍砍价！",
+            { Phase: BargainingStage.FinalPush } => $"""
                 最后机会！第{context.CurrentRound}轮/共{context.MaxRounds}轮，基于之前的对话，请发起最终攻势！你必须拿到更低的价格！
                 当前突发状况/事件：
                 {context.Observation}

@@ -16,7 +16,7 @@ namespace AgentWorld.Agent;
 /// <param name="instructions">Agent 的系统指令。</param>
 /// <param name="name">Agent 的名称。</param>
 /// <param name="description">Agent 的描述信息。</param>
-/// <param name="promptProvider">生成提示词的提供程序。</param>
+/// <param name="taskProvider">生成提示词的提供程序。</param>
 /// <param name="responseReflectionAgent">可选的输出守卫反思 Agent。</param>
 /// <param name="reflectionFailureFallbackContent">可选的反思失败后的兜底回复文本。</param>
 public class StatelessUserAgent<TContext>(
@@ -24,7 +24,7 @@ public class StatelessUserAgent<TContext>(
     string instructions,
     string name,
     string description,
-    Func<TContext, string> promptProvider,
+    Func<TContext, string> taskProvider,
     IResponseReflectionAgent? responseReflectionAgent = null,
     string? reflectionFailureFallbackContent = null) : IUserAgent<TContext>
     where TContext : IContext
@@ -42,7 +42,7 @@ public class StatelessUserAgent<TContext>(
     /// <summary>
     /// 生成提示词的提供程序。
     /// </summary>
-    private readonly Func<TContext, string> _promptProvider = promptProvider;
+    private readonly Func<TContext, string> _promptProvider = taskProvider;
 
     /// <summary>
     /// 可选的输出守卫反思 Agent。

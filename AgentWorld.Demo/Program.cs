@@ -1,7 +1,6 @@
 using System.ClientModel;
-using AgentWorld.Agent;
 using AgentWorld.Demo.App;
-using AgentWorld.Workflow;
+using AgentWorld.Router;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -21,20 +20,19 @@ var chatClient = new OpenAIClient(new ApiKeyCredential(apiKey), new OpenAIClient
     .GetChatClient(model)
     .AsIChatClient();
 
+// 核心业务流程:
+// 1. 用户输入先经过 RouteExecutor 判断用户意图。
+// 2. 如果用户表现出购买意向，则交由 BargainingParametersCollectionExecutor 收集必要参数。
+// 3. 参数收集完成后，将参数传递给 BargainingExecutor 执行砍价。
 var routeExecutor = new RouteExecutor(
     chatClient,
     [
-        new Route(
-            "当用户表达想要买东西、甚至要求砍价时执行，你将收集意图并将控制权转交给专门负责砍价的助手。",
-            nameof(BargainingParametersCollectionExecutor))
+        new Route("适用于用户表达购买意向、咨询商品价格或要求砍价的场景。", nameof(BargainingParametersCollectionExecutor))
     ]);
 var parametersCollectionExecutor = new BargainingParametersCollectionExecutor(chatClient);
 var bargainingExecutor = new BargainingExecutor(chatClient);
 var parametersCollectionUserInputPort = RequestPort.Create<string, string>(BargainingParametersCollectionExecutor.UserInputPortId);
 
-// 用户输入先经过 RouteExecutor 判断用户意图，如果表现出想买东西的意图，
-// 则交给 BargainingParametersCollectionExecutor 收集必要参数，参数收集完成后，
-// 会把收集好的参数传递给 BargainingExecutor 继续执行砍价。
 var workflow = new WorkflowBuilder(routeExecutor)
     .AddEdge(routeExecutor, parametersCollectionExecutor)
     .AddEdge(parametersCollectionExecutor, parametersCollectionUserInputPort)
@@ -63,32 +61,43 @@ while (true)
     {
         switch (workflowEvent)
         {
-            case WorkflowOutputEvent outputEvent when outputEvent.Is<string>(out var output):
+            case WorkflowOutputEvent e when e.Is<string>(out var output):
                 Console.WriteLine(output);
                 break;
-            case RequestInfoEvent requestEvent:
-                await HandleUserInputRequestAsync(run, requestEvent.Request);
+            case RequestInfoEvent e:
+                if (!await TryRespondToRequestAsync(run, e.Request))
+                {
+                    await run.CancelRunAsync();
+                    return;
+                }
                 break;
-            case WorkflowErrorEvent errorEvent:
-                Console.Error.WriteLine(errorEvent.Exception?.ToString() ?? "Unknown workflow error occurred.");
+            case WorkflowErrorEvent e:
+                Console.Error.WriteLine(e.Exception?.ToString() ?? "Unknown workflow error occurred.");
                 return;
-            case ExecutorFailedEvent failedEvent:
+            case ExecutorFailedEvent e:
                 Console.Error.WriteLine(
-                    $"Executor '{failedEvent.ExecutorId}' failed with {(failedEvent.Data is null ? "unknown error" : failedEvent.Data)}.");
+                    $"Executor '{e.ExecutorId}' failed with {(e.Data is null ? "unknown error" : e.Data)}.");
                 return;
         }
     }
 }
 
-static async Task HandleUserInputRequestAsync(StreamingRun run, ExternalRequest request)
+static async Task<bool> TryRespondToRequestAsync(StreamingRun run, ExternalRequest request)
 {
-    var userInput = Console.ReadLine();
-    if (userInput is null)
+    while (true)
     {
-        await run.CancelRunAsync();
-    }
-    else
-    {
-        await run.SendResponseAsync(request.CreateResponse(userInput));
+        var userInput = Console.ReadLine();
+        if (userInput is null)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(userInput))
+        {
+            await run.SendResponseAsync(request.CreateResponse(userInput));
+            return true;
+        }
+
+        Console.Write("Said: ");
     }
 }

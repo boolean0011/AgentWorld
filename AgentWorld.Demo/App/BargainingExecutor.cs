@@ -9,7 +9,7 @@ public class BargainingExecutor : Executor
 {
     private readonly IChatClient _chatClient;
 
-    private readonly BargainingOrchestrator _orchestrator;
+    private readonly BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation> _orchestrator;
 
     public BargainingExecutor(IChatClient chatClient) : base(nameof(BargainingExecutor))
     {
@@ -26,7 +26,14 @@ public class BargainingExecutor : Executor
 
     private async ValueTask HandleAsync(BargainingParameters request, IWorkflowContext context, CancellationToken cancellationToken)
     {
-        await foreach (var response in _orchestrator.RunAsync(request.ProductName, request.TargetPrice))
+        var bargainingContext = new BargainingContext
+        {
+            MaxRounds = _orchestrator.MaxRounds, // todo
+            ProductName = request.ProductName,
+            TargetPrice = request.TargetPrice
+        };
+
+        await foreach (var response in _orchestrator.RunAsync(bargainingContext))
         {
             switch (response)
             {
@@ -42,7 +49,7 @@ public class BargainingExecutor : Executor
         }
     }
 
-    private BargainingOrchestrator CreateBargainingAgent()
+    private BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation> CreateBargainingAgent()
     {
         IReadOnlyList<IUserAgent<BargainingContext>> clerkAgents =
         [
@@ -51,7 +58,7 @@ public class BargainingExecutor : Executor
                 instructions: File.ReadAllText(Path.Combine("Prompts", "xiao_mian_tuan.md")),
                 name: "小面团",
                 description: "小面团",
-                promptProvider: CustomUserAgentPrompt.XiaoMianTuan,
+                taskProvider: UserAgentTasks.XiaoMianTuan,
                 responseReflectionAgent: new ClerkResponseReflectionAgent(_chatClient)
             )
         ];
@@ -63,22 +70,22 @@ public class BargainingExecutor : Executor
                 instructions: File.ReadAllText(Path.Combine("Prompts", "mu_ye.md")),
                 name: "牧野",
                 description: "牧野",
-                promptProvider: CustomUserAgentPrompt.MuYe
+                taskProvider: UserAgentTasks.MuYe
             ),
             new StatelessUserAgent<BargainingContext>(
                 chatClient: _chatClient,
                 instructions: File.ReadAllText(Path.Combine("Prompts", "xiao_ai.md")),
                 name: "小艾",
                 description: "小艾",
-                promptProvider: CustomUserAgentPrompt.XiaoAi
+                taskProvider: UserAgentTasks.XiaoAi
             )
         ];
 
-        var orchestrator = new BargainingOrchestrator(
+        var orchestrator = new BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation>(
             clerkAgents,
             consumerAgents,
-            new BargainingJudgeAgent(_chatClient),
-            new CustomWorldObserver(),
+            new BargainingJudgeAgent<BargainingRoundEvaluation,BargainingContext>(_chatClient),
+            new BargainingWorldObserver(),
             20);
 
         return orchestrator;

@@ -3,7 +3,7 @@ using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
 
-namespace AgentWorld.Workflow;
+namespace AgentWorld.Router;
 
 public class RouteExecutor(IChatClient chatClient, IReadOnlyList<Route> routes, string? instructions = null) : Executor(nameof(RouteExecutor))
 {

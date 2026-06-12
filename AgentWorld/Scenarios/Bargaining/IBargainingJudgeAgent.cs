@@ -1,8 +1,6 @@
 namespace AgentWorld.Scenarios.Bargaining;
 
-public interface IBargainingJudgeAgent
+public interface IBargainingJudgeAgent<TEvaluation, TContext>
 {
-    Task<BargainingEvaluationResult> RunAsync(
-        BargainingContext state,
-        CancellationToken cancellationToken = default);
+    Task<TEvaluation> RunAsync(TContext context, CancellationToken cancellationToken = default);
 }

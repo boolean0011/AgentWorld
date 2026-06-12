@@ -1,3 +1,3 @@
-namespace AgentWorld.Demo.App;
+namespace AgentWorld.Scenarios.Bargaining;
 
 public sealed record BargainingParameters(string ProductName, decimal TargetPrice);
