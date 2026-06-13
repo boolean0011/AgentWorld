@@ -1,4 +1,5 @@
 using AgentWorld.Agent;
+using AgentWorld.Context;
 using AgentWorld.Scenarios.Bargaining;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
@@ -9,7 +10,7 @@ public class BargainingExecutor : Executor
 {
     private readonly IChatClient _chatClient;
 
-    private readonly BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation> _orchestrator;
+    private readonly BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation, WorldObservation> _orchestrator;
 
     public BargainingExecutor(IChatClient chatClient) : base(nameof(BargainingExecutor))
     {
@@ -28,7 +29,7 @@ public class BargainingExecutor : Executor
     {
         var bargainingContext = new BargainingContext
         {
-            MaxRounds = _orchestrator.MaxRounds, // todo
+            MaxRounds = _orchestrator.MaxRounds,
             ProductName = request.ProductName,
             TargetPrice = request.TargetPrice
         };
@@ -49,7 +50,7 @@ public class BargainingExecutor : Executor
         }
     }
 
-    private BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation> CreateBargainingAgent()
+    private BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation, WorldObservation> CreateBargainingAgent()
     {
         IReadOnlyList<IUserAgent<BargainingContext>> clerkAgents =
         [
@@ -81,11 +82,14 @@ public class BargainingExecutor : Executor
             )
         ];
 
-        var orchestrator = new BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation>(
+        var judgeAgent = new BargainingJudgeAgent<BargainingContext, BargainingRoundEvaluation>(_chatClient);
+        var worldObserverAgent = new BargainingWorldObserver();
+
+        var orchestrator = new BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation, WorldObservation>(
             clerkAgents,
             consumerAgents,
-            new BargainingJudgeAgent<BargainingRoundEvaluation,BargainingContext>(_chatClient),
-            new BargainingWorldObserver(),
+            judgeAgent,
+            worldObserverAgent,
             20);
 
         return orchestrator;

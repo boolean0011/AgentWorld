@@ -9,7 +9,7 @@ namespace AgentWorld.Scenarios.Bargaining;
 /// 
 /// 这个类使用模版偏化方法，因为prompt中已经写好了输出格式。
 /// </summary>
-public class BargainingJudgeAgent<TEvaluation, TContext> : IBargainingJudgeAgent<TEvaluation, TContext>
+public class BargainingJudgeAgent<TContext, TEvaluation> : IBargainingJudgeAgent<TContext, TEvaluation>
     where TContext : IContext
     where TEvaluation : BargainingRoundEvaluation
 {    

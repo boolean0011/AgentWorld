@@ -3,22 +3,23 @@ using AgentWorld.Context;
 
 namespace AgentWorld.Scenarios.Bargaining;
 
-public class BargainingOrchestrator<TContext, TEvaluation>(
+public class BargainingOrchestrator<TContext, TEvaluation, TWorldObservation>(
     IReadOnlyList<IUserAgent<TContext>> clerkAgents,
     IReadOnlyList<IUserAgent<TContext>> consumerAgents,
-    IBargainingJudgeAgent<TEvaluation, TContext> judgeAgent,
-    IWorldObserver<TContext, WorldObservation> worldObserverAgent, // todo
+    IBargainingJudgeAgent<TContext, TEvaluation> judgeAgent,
+    IWorldObserver<TContext, TWorldObservation> worldObserverAgent,
     int maxRounds)
     where TContext : BargainingContext
     where TEvaluation : BargainingRoundEvaluation
+    where TWorldObservation : WorldObservation
 {
     protected IReadOnlyList<IUserAgent<TContext>> ClerkAgents { get; } = clerkAgents;
 
     protected IReadOnlyList<IUserAgent<TContext>> ConsumerAgents { get; } = consumerAgents;
 
-    protected IBargainingJudgeAgent<TEvaluation, TContext> JudgeAgent { get; } = judgeAgent;
+    protected IBargainingJudgeAgent<TContext, TEvaluation> JudgeAgent { get; } = judgeAgent;
 
-    protected IWorldObserver<TContext, WorldObservation> WorldObserverAgent { get; } = worldObserverAgent;
+    protected IWorldObserver<TContext, TWorldObservation> WorldObserverAgent { get; } = worldObserverAgent;
 
     public int MaxRounds { get; } = maxRounds;
 
@@ -61,7 +62,7 @@ public class BargainingOrchestrator<TContext, TEvaluation>(
             // 根据裁判结果，决定是否收尾生命周期并跳出循环
             if (CheckTermination(context, out var terminationResponse))
             {
-                yield return terminationResponse;
+                yield return terminationResponse!;
                 break;
             }
         }
