@@ -2,9 +2,9 @@ using AgentWorld.Context;
 
 namespace AgentWorld.Agent;
 
-public interface IResponseReflectionAgent
+public interface ICriticAgent
 {
-    Task<OutputCheckResult> RunAsync(
+    Task<CriticResult> RunAsync(
         string content,
         IContext context,
         CancellationToken cancellationToken = default);

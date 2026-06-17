@@ -37,12 +37,12 @@ public class BargainingParametersCollectionExecutor(IChatClient chatClient) : Ex
 
         switch (response)
         {
-            case ParametersCollectionMessage result:
-                await context.SendMessageAsync(result.Message, UserInputPortId, cancellationToken);
+            case IncompleteParameterResult msg:
+                await context.SendMessageAsync(msg.Message, UserInputPortId, cancellationToken);
                 break;
-            case ParametersCollected<BargainingParameters> result:
+            case ParameterCollectionSuccess<BargainingParameters> msg:
                 _session = null;
-                await context.SendMessageAsync(result.Result, nameof(BargainingExecutor), cancellationToken);
+                await context.SendMessageAsync(msg.Result, nameof(BargainingExecutor), cancellationToken);
                 break;
             default:
                 throw new InvalidOperationException(

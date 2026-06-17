@@ -4,20 +4,20 @@ using Microsoft.Extensions.AI;
 
 namespace AgentWorld.Scenarios.Bargaining;
 
-public class ClerkResponseReflectionAgent : IResponseReflectionAgent
+public class ClerkCriticAgent : ICriticAgent
 {
     private readonly IChatClient _chatClient;
-    
+
     private readonly string _instructions;
 
-    public ClerkResponseReflectionAgent(IChatClient chatClient)
+    public ClerkCriticAgent(IChatClient chatClient)
     {
         ArgumentNullException.ThrowIfNull(chatClient);
         _chatClient = chatClient;
         _instructions = "你是一个严格的输出审核员，擅长判定文本并输出json。";
     }
 
-    public async Task<OutputCheckResult> RunAsync(
+    public async Task<CriticResult> RunAsync(
         string content,
         IContext context,
         CancellationToken cancellationToken = default)
@@ -43,7 +43,7 @@ public class ClerkResponseReflectionAgent : IResponseReflectionAgent
 
         try
         {
-            var response = await _chatClient.GetResponseAsync<OutputCheckResult>(
+            var response = await _chatClient.GetResponseAsync<CriticResult>(
                 messages,
                 new ChatOptions
                 {
@@ -55,7 +55,7 @@ public class ClerkResponseReflectionAgent : IResponseReflectionAgent
         catch (Exception ex)
         {
             Console.WriteLine($"OutputCheck 解析失败: {ex.Message}");
-            return new OutputCheckResult { IsValid = true, Reason = "解析失败允许放行" };
+            return new CriticResult { IsValid = true, Reason = "解析失败允许放行" };
         }
     }
 

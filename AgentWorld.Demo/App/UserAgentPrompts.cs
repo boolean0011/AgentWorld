@@ -2,11 +2,11 @@ using AgentWorld.Scenarios.Bargaining;
 
 namespace AgentWorld.Demo.App;
 
-public static class UserAgentTasks
+public static class UserAgentPrompts
 {
     public static readonly Func<BargainingContext, string> XiaoMianTuan = (context) =>
     {
-        return context switch
+        var prompt = context switch
         {
             { Phase: BargainingStage.Start } => "小艾和牧野走进了你的面包店，请热情地欢迎他们，并向他们介绍今天的招牌商品和价格。",
             { Phase: BargainingStage.FinalPush } => $"""
@@ -38,11 +38,13 @@ public static class UserAgentTasks
                 - 如果你的耐心值 <= 20，请直接下达逐客令，拒绝卖给他们。
             """
         };
+
+        return prompt;
     };
 
     public static readonly Func<BargainingContext, string> MuYe = (context) =>
     {
-        return context switch
+        var prompt = context switch
         {
             { Phase: BargainingStage.Start } => "你和小艾一起走进了小面团的面包店，看看有什么好吃的，顺便看看能不能砍砍价。",
             { Phase: BargainingStage.FinalPush } => $"""
@@ -56,11 +58,13 @@ public static class UserAgentTasks
                 {context.Observation}
             """
         };
+        
+        return prompt;
     };
 
     public static readonly Func<BargainingContext, string> XiaoAi = (context) =>
     {
-        return context switch
+        var prompt = context switch
         {
             { Phase: BargainingStage.Start } => "你和牧野一起走进了小面团的面包店，看到菜单上的价格觉得有点贵，决定砍砍价！",
             { Phase: BargainingStage.FinalPush } => $"""
@@ -74,5 +78,7 @@ public static class UserAgentTasks
                 {context.Observation}
             """
         };
+
+        return prompt;
     };
 }

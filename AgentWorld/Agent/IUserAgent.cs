@@ -9,7 +9,5 @@ public interface IUserAgent<TContext>
 
     string Description { get; }
 
-    Task<string> RunAsync(
-        TContext context,
-        CancellationToken cancellationToken = default);
+    Task<string> RunAsync(TContext context, CancellationToken cancellationToken = default);
 }

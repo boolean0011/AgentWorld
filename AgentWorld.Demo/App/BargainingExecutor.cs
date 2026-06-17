@@ -1,5 +1,4 @@
 using AgentWorld.Agent;
-using AgentWorld.Context;
 using AgentWorld.Scenarios.Bargaining;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
@@ -10,12 +9,12 @@ public class BargainingExecutor : Executor
 {
     private readonly IChatClient _chatClient;
 
-    private readonly BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation, WorldObservation> _orchestrator;
+    private readonly BargainingOrchestrator _orchestrator;
 
     public BargainingExecutor(IChatClient chatClient) : base(nameof(BargainingExecutor))
     {
         _chatClient = chatClient;
-        _orchestrator = CreateBargainingAgent();
+        _orchestrator = CreateBargainingOrchestrator();
     }
 
     protected override ProtocolBuilder ConfigureProtocol(ProtocolBuilder builder)
@@ -27,22 +26,23 @@ public class BargainingExecutor : Executor
 
     private async ValueTask HandleAsync(BargainingParameters request, IWorkflowContext context, CancellationToken cancellationToken)
     {
+        // 构建砍价上下文，包括砍价商品名称、预期价格、最大回合数等等关键信息
         var bargainingContext = new BargainingContext
         {
-            MaxRounds = _orchestrator.MaxRounds,
             ProductName = request.ProductName,
-            TargetPrice = request.TargetPrice
+            TargetPrice = request.TargetPrice,
+            MaxRounds = _orchestrator.MaxRounds
         };
 
         await foreach (var response in _orchestrator.RunAsync(bargainingContext))
         {
             switch (response)
             {
-                case AgentResponse result:
-                    await context.YieldOutputAsync($"当前发言角色：{result.AgentName}\n {result.Content}\n\n", cancellationToken);
+                case AgentMessage msg:
+                    await context.YieldOutputAsync($"当前发言角色：{msg.AgentName}\n {msg.Content}\n\n", cancellationToken);
                     break;
-                case SystemNotification result:
-                    await context.YieldOutputAsync($"{result.Status} {result.Message}\n\n", cancellationToken);
+                case NarratorMessage msg:
+                    await context.YieldOutputAsync($"{msg.Status} {msg.Message}\n\n", cancellationToken);
                     break;
                 default:
                     break;
@@ -50,7 +50,7 @@ public class BargainingExecutor : Executor
         }
     }
 
-    private BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation, WorldObservation> CreateBargainingAgent()
+    private BargainingOrchestrator CreateBargainingOrchestrator()
     {
         IReadOnlyList<IUserAgent<BargainingContext>> clerkAgents =
         [
@@ -58,9 +58,9 @@ public class BargainingExecutor : Executor
                 chatClient: _chatClient,
                 instructions: File.ReadAllText(Path.Combine("Prompts", "xiao_mian_tuan.md")),
                 name: "小面团",
-                description: "小面团",
-                taskProvider: UserAgentTasks.XiaoMianTuan,
-                responseReflectionAgent: new ClerkResponseReflectionAgent(_chatClient)
+                description: "云朵面包店年轻店员小面团",
+                taskPromptProvider: UserAgentPrompts.XiaoMianTuan,
+                criticAgent: new ClerkCriticAgent(_chatClient)
             )
         ];
 
@@ -70,27 +70,21 @@ public class BargainingExecutor : Executor
                 chatClient: _chatClient,
                 instructions: File.ReadAllText(Path.Combine("Prompts", "mu_ye.md")),
                 name: "牧野",
-                description: "牧野",
-                taskProvider: UserAgentTasks.MuYe
+                description: "云朵面包店的老顾客牧野",
+                taskPromptProvider: UserAgentPrompts.MuYe
             ),
             new StatelessUserAgent<BargainingContext>(
                 chatClient: _chatClient,
                 instructions: File.ReadAllText(Path.Combine("Prompts", "xiao_ai.md")),
                 name: "小艾",
-                description: "小艾",
-                taskProvider: UserAgentTasks.XiaoAi
+                description: "云朵面包店的老顾客小艾",
+                taskPromptProvider: UserAgentPrompts.XiaoAi
             )
         ];
 
-        var judgeAgent = new BargainingJudgeAgent<BargainingContext, BargainingRoundEvaluation>(_chatClient);
-        var worldObserverAgent = new BargainingWorldObserver();
-
-        var orchestrator = new BargainingOrchestrator<BargainingContext, BargainingRoundEvaluation, WorldObservation>(
-            clerkAgents,
-            consumerAgents,
-            judgeAgent,
-            worldObserverAgent,
-            20);
+        var judgeAgent = new BargainingJudgeAgent(_chatClient);
+        var worldObserverAgent = new BargainingWorldObserverAgent();
+        var orchestrator = new BargainingOrchestrator(clerkAgents, consumerAgents, judgeAgent, worldObserverAgent, 20);
 
         return orchestrator;
     }

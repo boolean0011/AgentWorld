@@ -61,7 +61,7 @@ public sealed class ParametersCollectionAgent<T>
         return await _agent.CreateSessionAsync(cancellationToken);
     }
 
-    public async Task<ParametersCollectionResponse> RunAsync(string message, AgentSession? session, CancellationToken cancellationToken = default)
+    public async Task<ParameterCollectionResult> RunAsync(string message, AgentSession? session, CancellationToken cancellationToken = default)
     {
         var response = await _agent.RunAsync(
             message: new ChatMessage(ChatRole.User, message),
@@ -71,7 +71,7 @@ public sealed class ParametersCollectionAgent<T>
         return await ParseAndInvokeAsync(response, cancellationToken);
     }
 
-    private async Task<ParametersCollectionResponse> ParseAndInvokeAsync(AgentResponse response, CancellationToken cancellationToken)
+    private async Task<ParameterCollectionResult> ParseAndInvokeAsync(AgentResponse response, CancellationToken cancellationToken)
     {
         var functionCall = response.Messages
             .SelectMany(static message => message.Contents)
@@ -80,7 +80,7 @@ public sealed class ParametersCollectionAgent<T>
 
         if (functionCall is null)
         {
-            return new ParametersCollectionMessage(response.Text);
+            return new IncompleteParameterResult(response.Text);
         }
 
         // 调用tools返回收集参数结果
@@ -94,6 +94,6 @@ public sealed class ParametersCollectionAgent<T>
                 $"Unexpected function result type: {result?.GetType().Name ?? "null"}")
         };
 
-        return new ParametersCollected<T>(convertResult);
+        return new ParameterCollectionSuccess<T>(convertResult);
     }
 }

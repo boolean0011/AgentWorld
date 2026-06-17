@@ -1,6 +1,6 @@
 namespace AgentWorld.Context;
 
-public interface IWorldObserver<TContext, TOutput>
+public interface IWorldObserver<TContext, TWorldObservation>
 {
-    Task<TOutput> RunAsync(TContext context);
+    Task<TWorldObservation> RunAsync(TContext context);
 }

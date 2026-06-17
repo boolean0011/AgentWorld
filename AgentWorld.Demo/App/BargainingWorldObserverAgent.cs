@@ -4,7 +4,7 @@ using AgentWorld.Scenarios.Bargaining;
 
 namespace AgentWorld.Demo.App;
 
-public class BargainingWorldObserver : IWorldObserver<BargainingContext, WorldObservation>
+public class BargainingWorldObserverAgent : IWorldObserver<BargainingContext, WorldObservation>
 {
     private readonly Random _random = new();
 
