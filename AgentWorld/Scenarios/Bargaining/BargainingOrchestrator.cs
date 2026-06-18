@@ -3,24 +3,25 @@ using AgentWorld.Context;
 
 namespace AgentWorld.Scenarios.Bargaining;
 
-public class BargainingOrchestrator(
-    IReadOnlyList<IUserAgent<BargainingContext>> clerkAgents,
-    IReadOnlyList<IUserAgent<BargainingContext>> consumerAgents,
+public class BargainingOrchestrator<TContext>(
+    IReadOnlyList<IUserAgent<TContext>> clerkAgents,
+    IReadOnlyList<IUserAgent<TContext>> consumerAgents,
     IBargainingJudge judgeAgent,
-    IWorldObserver<BargainingContext, WorldObservation> worldObserverAgent,
+    IWorldObserver<TContext, WorldObservation> worldObserverAgent,
     int maxRounds)
+    where TContext : BargainingContext
 {
-    protected IReadOnlyList<IUserAgent<BargainingContext>> ClerkAgents { get; } = clerkAgents;
+    protected IReadOnlyList<IUserAgent<TContext>> ClerkAgents { get; } = clerkAgents;
 
-    protected IReadOnlyList<IUserAgent<BargainingContext>> ConsumerAgents { get; } = consumerAgents;
+    protected IReadOnlyList<IUserAgent<TContext>> ConsumerAgents { get; } = consumerAgents;
 
     protected IBargainingJudge JudgeAgent { get; } = judgeAgent;
 
-    protected IWorldObserver<BargainingContext, WorldObservation> WorldObserverAgent { get; } = worldObserverAgent;
+    protected IWorldObserver<TContext, WorldObservation> WorldObserverAgent { get; } = worldObserverAgent;
 
     public int MaxRounds { get; } = maxRounds;
 
-    public virtual async IAsyncEnumerable<BargainingMessage> RunAsync(BargainingContext context)
+    public virtual async IAsyncEnumerable<BargainingMessage> RunAsync(TContext context)
     {
         // 1. Observe the world
         await ObserveWorldAsync(context);
@@ -71,14 +72,14 @@ public class BargainingOrchestrator(
         }
     }
 
-    protected virtual async Task ObserveWorldAsync(BargainingContext context)
+    protected virtual async Task ObserveWorldAsync(TContext context)
     {
         // 环境 Agent 获取环境内的相关事件 (Observation)
         var observation = await WorldObserverAgent.RunAsync(context);
         context.Observation = observation.Content;
     }
 
-    protected virtual async IAsyncEnumerable<BargainingMessage> StartPhaseAsync(BargainingContext context)
+    protected virtual async IAsyncEnumerable<BargainingMessage> StartPhaseAsync(TContext context)
     {
         // 开场阶段，让商家的每个Agent都轮流发言
         context.Phase = BargainingStage.Start;
@@ -88,7 +89,7 @@ public class BargainingOrchestrator(
         }
     }
 
-    protected virtual void UpdatePhaseForRound(BargainingContext context)
+    protected virtual void UpdatePhaseForRound(TContext context)
     {
         if (MaxRounds - context.CurrentRound < 3)
         {
@@ -97,7 +98,7 @@ public class BargainingOrchestrator(
         }
     }
 
-    protected virtual async IAsyncEnumerable<BargainingMessage> CustomerTurnAsync(BargainingContext context)
+    protected virtual async IAsyncEnumerable<BargainingMessage> CustomerTurnAsync(TContext context)
     {
         await foreach (var response in CustomerAgentRunAsync(context))
         {
@@ -105,7 +106,7 @@ public class BargainingOrchestrator(
         }
     }
 
-    protected virtual async IAsyncEnumerable<BargainingMessage> ClerkTurnAsync(BargainingContext context)
+    protected virtual async IAsyncEnumerable<BargainingMessage> ClerkTurnAsync(TContext context)
     {
         await foreach (var response in ClerkAgentRunAsync(context))
         {
@@ -113,26 +114,26 @@ public class BargainingOrchestrator(
         }
     }
 
-    protected virtual async Task<BargainingRoundEvaluation> EvaluateRoundAsync(BargainingContext context)
+    protected virtual async Task<BargainingRoundEvaluation> EvaluateRoundAsync(TContext context)
     {
         return await JudgeAgent.RunAsync(context);
     }
 
-    protected virtual void OnStateUpdated(BargainingContext context, BargainingRoundEvaluation evaluation)
+    protected virtual void OnStateUpdated(TContext context, BargainingRoundEvaluation evaluation)
     {
         Console.WriteLine($"【局势更新】耐心值: {context.Patience}/100, 好感度: {context.Affection}/100. (原因: {evaluation.Reason})");
     }
 
-    protected virtual bool CheckTermination(BargainingContext context, out BargainingMessage? terminationResponse)
+    protected virtual bool CheckTermination(TContext context, out BargainingMessage? terminationResponse)
     {
-        if (context.Result == BargainingOutcome.Agreed)
+        if (context.Result == BargainingResult.Agreed)
         {
             context.Phase = BargainingStage.Agreed;
             terminationResponse = new NarratorMessage("🎉 【结局达成：和平双赢】交易成功！双方达成一致。", context.Phase);
             return true;
         }
 
-        if (context.Result == BargainingOutcome.Broken || context.Patience <= 0)
+        if (context.Result == BargainingResult.Broken || context.Patience <= 0)
         {
             context.Phase = BargainingStage.Broken;
             terminationResponse = new NarratorMessage("💥 【结局达成：谈判破裂/被赶出门】失去耐心，谈判破裂！", context.Phase);
@@ -143,7 +144,7 @@ public class BargainingOrchestrator(
         return false;
     }
 
-    protected virtual async IAsyncEnumerable<BargainingMessage> EndPhaseAsync(BargainingContext context)
+    protected virtual async IAsyncEnumerable<BargainingMessage> EndPhaseAsync(TContext context)
     {
         // 砍价结束后，处理收尾阶段逻辑
         if (context.Phase != BargainingStage.Agreed && context.Phase != BargainingStage.Broken)
@@ -154,14 +155,17 @@ public class BargainingOrchestrator(
         await Task.CompletedTask;
     }
 
-    protected virtual void UpdateState(BargainingContext context, BargainingRoundEvaluation evaluation)
+    protected virtual void UpdateState(TContext context, BargainingRoundEvaluation evaluation)
     {
         context.Patience = Math.Clamp(context.Patience + evaluation.PatienceDelta, 0, 100);
         context.Affection = Math.Clamp(context.Affection + evaluation.AffectionDelta, 0, 100);
-        context.Result = evaluation.Result;
+        if (evaluation.Result.HasValue)
+        {
+            context.Result = evaluation.Result;
+        }
     }
 
-    protected virtual async IAsyncEnumerable<BargainingMessage> CustomerAgentRunAsync(BargainingContext context)
+    protected virtual async IAsyncEnumerable<BargainingMessage> CustomerAgentRunAsync(TContext context)
     {
         foreach (var agent in ConsumerAgents.OrderBy(_ => Random.Shared.Next()))
         {
@@ -170,7 +174,7 @@ public class BargainingOrchestrator(
         }
     }
 
-    protected virtual async IAsyncEnumerable<BargainingMessage> ClerkAgentRunAsync(BargainingContext context)
+    protected virtual async IAsyncEnumerable<BargainingMessage> ClerkAgentRunAsync(TContext context)
     {
         foreach (var agent in ClerkAgents.OrderBy(_ => Random.Shared.Next()))
         {

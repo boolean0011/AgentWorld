@@ -1,4 +1,5 @@
 using AgentWorld.Agent;
+using AgentWorld.Context;
 using AgentWorld.Scenarios.Bargaining;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
@@ -9,7 +10,7 @@ public class BargainingExecutor : Executor
 {
     private readonly IChatClient _chatClient;
 
-    private readonly BargainingOrchestrator _orchestrator;
+    private readonly BargainingOrchestrator<BargainingContext> _orchestrator;
 
     public BargainingExecutor(IChatClient chatClient) : base(nameof(BargainingExecutor))
     {
@@ -31,7 +32,8 @@ public class BargainingExecutor : Executor
         {
             ProductName = request.ProductName,
             TargetPrice = request.TargetPrice,
-            MaxRounds = _orchestrator.MaxRounds
+            MaxRounds = _orchestrator.MaxRounds,
+            ConversationHistory = new InMemoryConversationHistoryProvider()
         };
 
         await foreach (var response in _orchestrator.RunAsync(bargainingContext))
@@ -50,7 +52,7 @@ public class BargainingExecutor : Executor
         }
     }
 
-    private BargainingOrchestrator CreateBargainingOrchestrator()
+    private BargainingOrchestrator<BargainingContext> CreateBargainingOrchestrator()
     {
         IReadOnlyList<IUserAgent<BargainingContext>> clerkAgents =
         [
@@ -84,7 +86,7 @@ public class BargainingExecutor : Executor
 
         var judgeAgent = new BargainingJudgeAgent(_chatClient);
         var worldObserverAgent = new BargainingWorldObserverAgent();
-        var orchestrator = new BargainingOrchestrator(clerkAgents, consumerAgents, judgeAgent, worldObserverAgent, 20);
+        var orchestrator = new BargainingOrchestrator<BargainingContext>(clerkAgents, consumerAgents, judgeAgent, worldObserverAgent, 20);
 
         return orchestrator;
     }

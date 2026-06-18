@@ -2,17 +2,17 @@ using Microsoft.Extensions.AI;
 
 namespace AgentWorld.Scenarios.Bargaining;
 
-public class BargainingJudgeAgent(IChatClient chatClient, string? prompt = null) : IBargainingJudge
+public class BargainingJudgeAgent(IChatClient chatClient, string? instructions = null) : IBargainingJudge
 {
     /// <summary>
-    /// 底层使用的 AI 聊天客户端。
+    /// 底层使用的 AI chat 客户端。
     /// </summary>
     private readonly IChatClient _chatClient = chatClient;
 
     /// <summary>
     /// 裁判的系统提示词（指令）。
     /// </summary>
-    private readonly string _instructions = prompt ?? DefaultInstructions;
+    private readonly string _instructions = instructions ?? DefaultInstructions;
 
     /// <summary>
     /// 触发裁判对输入的消息列表进行最终判定的 User 唤醒词。
@@ -31,8 +31,7 @@ public class BargainingJudgeAgent(IChatClient chatClient, string? prompt = null)
         分析用户提供的对话历史中最新一轮互动，并对其进行评估。请以 JSON 格式输出评估结果。
 
         # Evaluation Criteria
-        1. 谈判结果：输出字段 outcome，值只能是以下三个之一：
-           - "Ongoing"：谈判仍在继续，尚未结束。
+        1. 谈判结果：输出字段 result，值只能是以下两个之一（谈判仍在进行时省略该字段，不输出 result）：
            - "Agreed"：买卖双方明确表达了"达成交易"、"接受价格"或"同意条件"。
            - "Broken"：卖方明确下达了"逐客令"、拒绝继续沟通或明确表示不卖了。
         2. 耐心值变化：买方的发言对卖方的"耐心"有何影响？如果是胡搅蛮缠、出价极低，耐心下降（负数，如 -10 到 -20）；正常交流则为 0。(patienceDelta)
@@ -49,9 +48,8 @@ public class BargainingJudgeAgent(IChatClient chatClient, string? prompt = null)
     /// <returns>裁判打分和判定的结构化结果。</returns>
     public virtual async Task<BargainingRoundEvaluation> RunAsync(BargainingContext context, CancellationToken cancellationToken = default)
     {
-        // todo
         // 构造发送给大模型的完整上下文（历史对话 + 裁判触发词）
-        var messages = new List<ChatMessage>(context.ConversationHistory)
+        var messages = new List<ChatMessage>(context.ConversationHistory.GetHistory())
         {
             new(ChatRole.User, _triggerPrompt)
         };

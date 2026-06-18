@@ -1,11 +1,8 @@
 namespace AgentWorld.Scenarios.Bargaining;
 
 /// <summary>砍价谈判的结局状态。</summary>
-public enum BargainingOutcome
+public enum BargainingResult
 {
-    /// <summary>谈判进行中，尚未结束。</summary>
-    Ongoing,
-
     /// <summary>买卖双方达成交易。</summary>
     Agreed,
 

@@ -42,21 +42,21 @@ var workflow = new WorkflowBuilder(routeExecutor)
     .WithName("AgentWorld Demo Workflow")
     .Build();
 
-while (true)
+Console.WriteLine("Said:");
+var userInput = Console.ReadLine();
+while (userInput?.Trim().Length == 0)
 {
-    Console.Write("Said:");
-    var userInput = Console.ReadLine();
-    if (userInput is null)
-    {
-        break;
-    }
+    userInput = Console.ReadLine();
+}
 
-    if (string.IsNullOrWhiteSpace(userInput))
-    {
-        continue;
-    }
+if (userInput is { } input)
+{
+    await using var run = await InProcessExecution.Default.RunStreamingAsync(workflow, input);
+    await ProcessWorkflowRunAsync(run);
+}
 
-    await using var run = await InProcessExecution.Default.RunStreamingAsync(workflow, userInput);
+static async Task<bool> ProcessWorkflowRunAsync(StreamingRun run)
+{
     await foreach (var workflowEvent in run.WatchStreamAsync())
     {
         switch (workflowEvent)
@@ -65,39 +65,40 @@ while (true)
                 Console.WriteLine(output);
                 break;
             case RequestInfoEvent e:
-                if (!await TryRespondToRequestAsync(run, e.Request))
+                if (!await WaitForUserInputAsync(run, e.Request))
                 {
                     await run.CancelRunAsync();
-                    return;
+                    return false;
                 }
                 break;
             case WorkflowErrorEvent e:
                 Console.Error.WriteLine(e.Exception?.ToString() ?? "Unknown workflow error occurred.");
-                return;
+                return false;
             case ExecutorFailedEvent e:
                 Console.Error.WriteLine(
                     $"Executor '{e.ExecutorId}' failed with {(e.Data is null ? "unknown error" : e.Data)}.");
-                return;
+                return false;
+            default:
+                Console.Error.WriteLine($"Unexpected workflow event type: {workflowEvent.GetType().Name}");
+                return false;
         }
     }
+
+    return true;
 }
 
-static async Task<bool> TryRespondToRequestAsync(StreamingRun run, ExternalRequest request)
+static async Task<bool> WaitForUserInputAsync(StreamingRun run, ExternalRequest request)
 {
-    while (true)
+    while (Console.ReadLine() is { } userInput)
     {
-        var userInput = Console.ReadLine();
-        if (userInput is null)
+        if (string.IsNullOrWhiteSpace(userInput))
         {
-            return false;
+            continue;
         }
 
-        if (!string.IsNullOrWhiteSpace(userInput))
-        {
-            await run.SendResponseAsync(request.CreateResponse(userInput));
-            return true;
-        }
-
-        Console.Write("Said: ");
+        await run.SendResponseAsync(request.CreateResponse(userInput));
+        return true;
     }
+
+    return false;
 }

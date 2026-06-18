@@ -59,7 +59,7 @@ public class StatelessUserAgent<TContext>(
     {
         // 根据世界事件和当前状态生成 prompt
         var prompt = _taskPromptProvider(context);
-        List<ChatMessage> messages = [.. context.ConversationHistory, new ChatMessage(ChatRole.User, prompt)]; //todo
+        List<ChatMessage> messages = [.. context.ConversationHistory.GetHistory(), new ChatMessage(ChatRole.User, prompt)];
 
         var response = await _chatClient.GetResponseAsync(
             messages,
@@ -107,7 +107,7 @@ public class StatelessUserAgent<TContext>(
             }
         }
 
-        context.ConversationHistory.Add(
+        context.ConversationHistory.Append(
             new ChatMessage(ChatRole.User, $"现在是**{Name}**发言: {content}")
             {
                 AuthorName = Name

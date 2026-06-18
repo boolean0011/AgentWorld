@@ -12,15 +12,11 @@ public class ClerkCriticAgent : ICriticAgent
 
     public ClerkCriticAgent(IChatClient chatClient)
     {
-        ArgumentNullException.ThrowIfNull(chatClient);
         _chatClient = chatClient;
         _instructions = "你是一个严格的输出审核员，擅长判定文本并输出json。";
     }
 
-    public async Task<CriticResult> RunAsync(
-        string content,
-        IContext context,
-        CancellationToken cancellationToken = default)
+    public async Task<CriticResult> RunAsync(string content, IContext context, CancellationToken cancellationToken = default)
     {
         var prompt = $$"""
             你是一个专门负责审核价格折扣的裁判。
@@ -38,7 +34,7 @@ public class ClerkCriticAgent : ICriticAgent
         {
             new(ChatRole.System, prompt)
         };
-        messages.AddRange(context.ConversationHistory);
+        messages.AddRange(context.ConversationHistory.GetHistory());
         messages.Add(new(ChatRole.User, $"[这是店员草拟的最新回复，请审核这段内容]：{content}"));
 
         try
