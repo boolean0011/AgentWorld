@@ -2,8 +2,27 @@ using AgentWorld.Scenarios.Bargaining;
 
 namespace AgentWorld.Demo.App;
 
+/// <summary>
+/// 砍价场景各 Agent 的动态 Prompt 提供器集合。
+/// <para>
+/// 每个静态成员均为一个 <see cref="Func{TContext, TResult}"/> 委托，
+/// 在每轮发言前由 Agent 调用，根据当前 <see cref="BargainingContext"/> 的阶段、
+/// 回合数、状态值和环境事件动态生成对应的用户侧提示词。
+/// </para>
+/// </summary>
 public static class UserAgentPrompts
 {
+    /// <summary>
+    /// 店员「小面团」的 Prompt 提供器。
+    /// <para>
+    /// 根据当前砍价阶段生成相应的角色提示词：
+    /// <list type="bullet">
+    ///   <item><description><see cref="BargainingStage.Start"/>：热情欢迎顾客并介绍招牌商品和价格。</description></item>
+    ///   <item><description><see cref="BargainingStage.FinalPush"/>：提示即将结束，附带当前耐心值/好感度、环境事件及折扣策略约束（底线8折、不得反悔涨价、耐心过低则逐客）。</description></item>
+    ///   <item><description>其他阶段：继续应对砍价，附带相同的状态信息和折扣策略约束。</description></item>
+    /// </list>
+    /// </para>
+    /// </summary>
     public static readonly Func<BargainingContext, string> XiaoMianTuan = (context) =>
     {
         var prompt = context switch
@@ -42,6 +61,17 @@ public static class UserAgentPrompts
         return prompt;
     };
 
+    /// <summary>
+    /// 顾客「牧野」的 Prompt 提供器。
+    /// <para>
+    /// 根据当前砍价阶段生成相应的角色提示词：
+    /// <list type="bullet">
+    ///   <item><description><see cref="BargainingStage.Start"/>：随小艾进入面包店，随意逛逛并顺手砍价。</description></item>
+    ///   <item><description><see cref="BargainingStage.FinalPush"/>：使出杀手锏，配合小艾发起最终冲刺争取最低价，并附带环境事件。</description></item>
+    ///   <item><description>其他阶段：继续配合小艾砍价，附带当前环境事件。</description></item>
+    /// </list>
+    /// </para>
+    /// </summary>
     public static readonly Func<BargainingContext, string> MuYe = (context) =>
     {
         var prompt = context switch
@@ -62,6 +92,17 @@ public static class UserAgentPrompts
         return prompt;
     };
 
+    /// <summary>
+    /// 顾客「小艾」的 Prompt 提供器。
+    /// <para>
+    /// 根据当前砍价阶段生成相应的角色提示词：
+    /// <list type="bullet">
+    ///   <item><description><see cref="BargainingStage.Start"/>：随牧野进入面包店，觉得价格偏贵，主动决定砍价。</description></item>
+    ///   <item><description><see cref="BargainingStage.FinalPush"/>：发起最终攻势，务必拿到更低价格，并附带环境事件。</description></item>
+    ///   <item><description>其他阶段：持续推进砍价攻势，附带当前环境事件。</description></item>
+    /// </list>
+    /// </para>
+    /// </summary>
     public static readonly Func<BargainingContext, string> XiaoAi = (context) =>
     {
         var prompt = context switch
@@ -82,3 +123,4 @@ public static class UserAgentPrompts
         return prompt;
     };
 }
+

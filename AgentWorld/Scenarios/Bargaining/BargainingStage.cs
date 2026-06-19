@@ -6,7 +6,7 @@ namespace AgentWorld.Scenarios.Bargaining;
 /// </summary>
 public enum BargainingStage
 {
-    NotStarted,
+    NotStarted,     // 未开始
     Start,          // 开场欢迎/提出意向
     Ongoing,        // 正常砍价拉锯阶段
     FinalPush,      // 最后冲刺阶段（即将结束）

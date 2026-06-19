@@ -2,6 +2,15 @@ using Microsoft.Extensions.AI;
 
 namespace AgentWorld.Scenarios.Bargaining;
 
+/// <summary>
+/// 基于大模型的砍价场景裁判代理，实现 <see cref="IBargainingJudge"/> 契约。
+/// <para>
+/// 裁判以无状态方式工作：每次调用 <see cref="RunAsync"/> 时，将完整的对话历史连同触发词一起发送给大模型，
+/// 由大模型对最新一轮互动进行客观评估，并以结构化 JSON 格式返回耐心值变化、好感度变化及谈判结果。
+/// </para>
+/// </summary>
+/// <param name="chatClient">用于调用大模型进行裁判评估的聊天客户端。</param>
+/// <param name="instructions">可选的自定义裁判系统指令，为 <see langword="null"/> 时使用内置的默认指令。</param>
 public class BargainingJudgeAgent(IChatClient chatClient, string? instructions = null) : IBargainingJudge
 {
     /// <summary>
