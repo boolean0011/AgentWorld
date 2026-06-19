@@ -33,7 +33,7 @@ public class BargainingExecutor : Executor
             ProductName = request.ProductName,
             TargetPrice = request.TargetPrice,
             MaxRounds = _orchestrator.MaxRounds,
-            ConversationHistory = new InMemoryConversationHistoryProvider()
+            ChatHistory = new InMemoryChatHistoryProvider()
         };
 
         await foreach (var response in _orchestrator.RunAsync(bargainingContext))
@@ -61,7 +61,7 @@ public class BargainingExecutor : Executor
                 instructions: File.ReadAllText(Path.Combine("Prompts", "xiao_mian_tuan.md")),
                 name: "小面团",
                 description: "云朵面包店年轻店员小面团",
-                taskPromptProvider: UserAgentPrompts.XiaoMianTuan,
+                promptProvider: UserAgentPrompts.XiaoMianTuan,
                 criticAgent: new ClerkCriticAgent(_chatClient)
             )
         ];
@@ -73,14 +73,14 @@ public class BargainingExecutor : Executor
                 instructions: File.ReadAllText(Path.Combine("Prompts", "mu_ye.md")),
                 name: "牧野",
                 description: "云朵面包店的老顾客牧野",
-                taskPromptProvider: UserAgentPrompts.MuYe
+                promptProvider: UserAgentPrompts.MuYe
             ),
             new StatelessUserAgent<BargainingContext>(
                 chatClient: _chatClient,
                 instructions: File.ReadAllText(Path.Combine("Prompts", "xiao_ai.md")),
                 name: "小艾",
                 description: "云朵面包店的老顾客小艾",
-                taskPromptProvider: UserAgentPrompts.XiaoAi
+                promptProvider: UserAgentPrompts.XiaoAi
             )
         ];
 

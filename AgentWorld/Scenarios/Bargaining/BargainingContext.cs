@@ -43,7 +43,7 @@ public class BargainingContext : IContext
     public BargainingResult? Result { get; set; } = null;
 
     /// <summary>全局对话历史提供器，由调用方在初始化时注入，可替换为不同的存储策略。</summary>
-    public required IConversationHistoryProvider ConversationHistory { get; init; }
+    public required IChatHistoryProvider ChatHistory { get; init; }
 
     /// <summary>动态属性包，允许注入或存放任意自定义的附加上下文数据。</summary>
     public IDictionary<string, object> Properties { get; } = new Dictionary<string, object>();

@@ -49,7 +49,7 @@ public class BargainingJudgeAgent(IChatClient chatClient, string? instructions =
     public virtual async Task<BargainingRoundEvaluation> RunAsync(BargainingContext context, CancellationToken cancellationToken = default)
     {
         // 构造发送给大模型的完整上下文（历史对话 + 裁判触发词）
-        var messages = new List<ChatMessage>(context.ConversationHistory.GetHistory())
+        var messages = new List<ChatMessage>(context.ChatHistory.GetHistory())
         {
             new(ChatRole.User, _triggerPrompt)
         };

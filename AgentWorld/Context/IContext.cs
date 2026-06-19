@@ -6,7 +6,7 @@ namespace AgentWorld.Context;
 public interface IContext
 {
     /// <summary>全局对话历史提供器，按时间顺序追加，所有 Agent 均可读取。</summary>
-    IConversationHistoryProvider ConversationHistory { get; }
+    IChatHistoryProvider ChatHistory { get; }
 
     /// <summary>动态属性包，允许注入或存放任意自定义的附加上下文数据。</summary>
     IDictionary<string, object> Properties { get; }

@@ -5,7 +5,7 @@ namespace AgentWorld.Context;
 /// <summary>
 /// 基于内存列表的默认对话历史实现，直接在进程内维护消息列表。
 /// </summary>
-public class InMemoryConversationHistoryProvider : IConversationHistoryProvider
+public class InMemoryChatHistoryProvider : IChatHistoryProvider
 {
     private readonly List<ChatMessage> _messages = [];
 

@@ -37,7 +37,7 @@ public class BargainingParametersCollectionExecutor(IChatClient chatClient) : Ex
 
         switch (response)
         {
-            case IncompleteParameterResult msg:
+            case IncompleteParameterCollection msg:
                 await context.SendMessageAsync(msg.Message, UserInputPortId, cancellationToken);
                 break;
             case ParameterCollectionSuccess<BargainingParameters> msg:

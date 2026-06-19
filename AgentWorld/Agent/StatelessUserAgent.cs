@@ -3,14 +3,31 @@ using Microsoft.Extensions.AI;
 
 namespace AgentWorld.Agent;
 
+/// <summary>
+/// 表示一个无状态的用户 Agent 实现，无状态是指 Agent 自身不维护状态，状态完全由外部 <see cref="IContext"/> 维护。
+/// <para>
+/// 该 Agent 封装了与 <see cref="IChatClient"/> 的交互，能够根据任务提示词提供程序生成提示词，
+/// 并且支持可选的审核 Agent (<see cref="ICriticAgent"/>) 对输出结果进行多轮合规校验与修正。
+/// </para>
+/// </summary>
+/// <typeparam name="TContext">场景上下文类型，必须实现 <see cref="IContext"/>。</typeparam>
+/// <param name="chatClient">底层使用的 AI 聊天客户端。</param>
+/// <param name="instructions">Agent 的系统指令。</param>
+/// <param name="name">Agent 的名称。</param>
+/// <param name="description">Agent 的角色或职责描述。</param>
+/// <param name="promptProvider">根据上下文动态生成当前轮次用户提示词的委托函数。</param>
+/// <param name="criticAgent">可选的输出合规性审核 Critic Agent。</param>
+/// <param name="criticFallbackContent">可选的在审核多次失败时的默认兜底回复文本。</param>
+/// <param name="maxCriticAttempts">Critic 审核的最大重试次数，默认为 3 次。</param>
 public class StatelessUserAgent<TContext>(
     IChatClient chatClient,
     string instructions,
     string name,
     string description,
-    Func<TContext, string> taskPromptProvider,
+    Func<TContext, string> promptProvider,
     ICriticAgent? criticAgent = null,
-    string? criticFallbackContent = null) : IUserAgent<TContext>
+    string? criticFallbackContent = null,
+    int maxCriticAttempts = 3) : IUserAgent<TContext>
     where TContext : IContext
 {
     /// <summary>
@@ -26,7 +43,7 @@ public class StatelessUserAgent<TContext>(
     /// <summary>
     /// 生成提示词的提供程序。
     /// </summary>
-    private readonly Func<TContext, string> _taskPromptProvider = taskPromptProvider;
+    private readonly Func<TContext, string> _promptProvider = promptProvider;
 
     /// <summary>
     /// 可选的输出守卫反思 Agent。
@@ -37,6 +54,11 @@ public class StatelessUserAgent<TContext>(
     /// 反思校验失败时的兜底回复文本。
     /// </summary>
     private readonly string _criticFallbackContent = criticFallbackContent ?? "抱歉，我刚才有点走神了，没听清您说什么。";
+
+    /// <summary>
+    /// Critic 审核最大重试次数。
+    /// </summary>
+    private readonly int _maxCriticAttempts = maxCriticAttempts;
 
     /// <summary>
     /// Agent 名称。
@@ -58,8 +80,8 @@ public class StatelessUserAgent<TContext>(
     public async Task<string> RunAsync(TContext context, CancellationToken cancellationToken = default)
     {
         // 根据世界事件和当前状态生成 prompt
-        var prompt = _taskPromptProvider(context);
-        List<ChatMessage> messages = [.. context.ConversationHistory.GetHistory(), new ChatMessage(ChatRole.User, prompt)];
+        var prompt = _promptProvider(context);
+        List<ChatMessage> messages = [.. context.ChatHistory.GetHistory(), new ChatMessage(ChatRole.User, prompt)];
 
         var response = await _chatClient.GetResponseAsync(
             messages,
@@ -74,9 +96,9 @@ public class StatelessUserAgent<TContext>(
         if (_criticAgent is not null)
         {
             var success = false;
-            for (var i = 0; i < _criticAgent.MaxCount; i++)
+            for (var i = 0; i < _maxCriticAttempts; i++)
             {
-                var checkResult = await _criticAgent.RunAsync(content, context, cancellationToken);
+                var checkResult = await _criticAgent.RunAsync(context, content, cancellationToken);
                 if (checkResult.IsValid)
                 {
                     success = true;
@@ -107,7 +129,7 @@ public class StatelessUserAgent<TContext>(
             }
         }
 
-        context.ConversationHistory.Append(
+        context.ChatHistory.Append(
             new ChatMessage(ChatRole.User, $"现在是**{Name}**发言: {content}")
             {
                 AuthorName = Name
